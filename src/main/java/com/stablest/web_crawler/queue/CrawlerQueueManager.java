@@ -16,11 +16,6 @@ import java.util.function.Consumer;
 import java.util.regex.Matcher;
 
 public class CrawlerQueueManager {
-
-    public interface ProcessStarted {
-        void onProcessStarted(CrawlNode crawlNode);
-    }
-
     static private final CrawlerQueueManager INSTANCE = new CrawlerQueueManager();
     final private Semaphore semaphore = new Semaphore(256, true);
     final private HttpClient httpClient = HttpService.getClient();
@@ -28,7 +23,7 @@ public class CrawlerQueueManager {
     final private ScheduledExecutorService workers = Executors.newScheduledThreadPool(1);
     final private ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     final private BlockingQueue<CrawlNode> queue = new LinkedBlockingQueue<>();
-    private volatile ProcessStarted processStartedListener;
+    private volatile Consumer<CrawlNode> processStartedListener;
     private volatile Consumer<Crawl> processCompletedListener;
 
     public CrawlerQueueManager() {
@@ -57,7 +52,7 @@ public class CrawlerQueueManager {
         return queue.size();
     }
 
-    public void setOnProcessStarted(ProcessStarted processStarted) {
+    public void setOnProcessStarted(Consumer<CrawlNode> processStarted) {
         this.processStartedListener = processStarted;
     }
 
@@ -73,7 +68,6 @@ public class CrawlerQueueManager {
         try {
             while (!Thread.currentThread().isInterrupted()) {
                 CrawlNode crawlNode = queue.take();
-                //processStartedListener.onProcessStarted(crawlNode);
                 process(crawlNode);
             }
         } catch (InterruptedException e) {
@@ -82,6 +76,7 @@ public class CrawlerQueueManager {
     }
 
     private void process(CrawlNode crawlNode) {
+        processStartedListener.accept(crawlNode);
         Crawl crawl = crawlNode.getCrawl();
         String currentURL = crawlNode.getUrl();
         if (!crawl.getVisited().add(currentURL)) {
