@@ -1,7 +1,6 @@
 package com.stablest.web_crawler.queue;
 
 import com.stablest.web_crawler.dto.Crawl;
-import com.stablest.web_crawler.service.HttpService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +17,7 @@ import java.util.regex.Matcher;
 public class CrawlerQueueManager {
     static private final CrawlerQueueManager INSTANCE = new CrawlerQueueManager();
     final private Semaphore semaphore = new Semaphore(256, true);
-    final private HttpClient httpClient = HttpService.getClient();
+    final private HttpClient httpClient = CrawlerQueueHttpClient.getClient();
     final private Logger logger = LoggerFactory.getLogger(CrawlerQueueManager.class);
     final private ScheduledExecutorService workers = Executors.newScheduledThreadPool(1);
     final private ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
