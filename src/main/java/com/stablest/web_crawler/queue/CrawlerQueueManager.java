@@ -74,8 +74,12 @@ public class CrawlerQueueManager {
                 CrawlNode crawlNode = queue.take();
                 process(crawlNode);
             }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+        } catch (Exception e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            } else {
+                logger.error("PROCESS_LOOP::ERROR::NOT_HANDLED: {}", e.getMessage());
+            }
         }
     }
 
