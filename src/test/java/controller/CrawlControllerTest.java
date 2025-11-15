@@ -37,7 +37,7 @@ public class CrawlControllerTest {
     }
 
     @Test
-    void testCreateCrawl_ValidInput() {
+    void givenValidInput_whenCreateCrawl_thenReturnsCreatedCrawl() {
         String input = "{\"keyword\": \"java\"}";
         when(request.body()).thenReturn(input);
         CreateCrawlOutput expectedOutput = new CreateCrawlOutput("crawl123");
@@ -48,7 +48,7 @@ public class CrawlControllerTest {
     }
 
     @Test
-    void testCreateCrawl_InvalidInput() {
+    void givenMissingKeyword_whenCreateCrawl_thenThrowsValidationException() {
         String invalidInput = "{\"key\": \"java\"}";
         when(request.body()).thenReturn(invalidInput);
         assertThrows(
@@ -59,7 +59,7 @@ public class CrawlControllerTest {
     }
 
     @Test
-    void testGetCrawl_ValidAndFoundInput() {
+    void givenExistingCrawlId_whenGetCrawlResult_thenReturnsCrawlResult() {
         when(request.params("id")).thenReturn("crawl123");
         CrawlPublicResult expectedOutput = new CrawlPublicResult("crawl123", "done", List.of("http://base_url.com"));
         when(crawlService.getCrawl("crawl123")).thenReturn(expectedOutput);
@@ -70,7 +70,7 @@ public class CrawlControllerTest {
 
 
     @Test
-    void testGetCrawlResult_ValidAndNotFoundResult() {
+    void givenNonExistentCrawlId_whenGetCrawlResult_thenThrowsNotFound() {
         when(request.params("id")).thenReturn("crawl123");
         when(crawlService.getCrawl("crawl123")).thenThrow(NotFoundException.class);
         assertThrows(
@@ -80,7 +80,7 @@ public class CrawlControllerTest {
     }
 
     @Test
-    void testCreateCrawl_InvalidJsonThrows() {
+    void givenInvalidJson_whenCreateCrawl_thenThrowsException() {
         when(request.body()).thenReturn("invalid-json");
         assertThrows(Exception.class, () -> controller.createCrawl(request, response));
     }
