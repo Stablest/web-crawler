@@ -1,4 +1,4 @@
-package com.stablest.web_crawler.service;
+package com.stablest.web_crawler.context;
 
 import com.stablest.web_crawler.dto.Crawl;
 

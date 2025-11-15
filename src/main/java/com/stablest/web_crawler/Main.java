@@ -4,7 +4,7 @@ import com.stablest.web_crawler.controller.CrawlController;
 import com.stablest.web_crawler.exception.ExceptionHandler;
 import com.stablest.web_crawler.exception.NotFoundException;
 import com.stablest.web_crawler.exception.ValidationException;
-import com.stablest.web_crawler.service.ApplicationContext;
+import com.stablest.web_crawler.context.ApplicationContext;
 import com.stablest.web_crawler.service.WorkerService;
 import com.stablest.web_crawler.transformer.JsonTransformer;
 

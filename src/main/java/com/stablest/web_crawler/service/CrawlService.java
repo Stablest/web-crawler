@@ -1,5 +1,6 @@
 package com.stablest.web_crawler.service;
 
+import com.stablest.web_crawler.context.ApplicationContext;
 import com.stablest.web_crawler.dto.Crawl;
 import com.stablest.web_crawler.dto.CrawlPublicResult;
 import com.stablest.web_crawler.dto.output.CreateCrawlOutput;
