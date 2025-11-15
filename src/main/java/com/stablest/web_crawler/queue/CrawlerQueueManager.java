@@ -22,8 +22,8 @@ public class CrawlerQueueManager {
     final private ScheduledExecutorService workers = Executors.newScheduledThreadPool(1);
     final private ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     final private BlockingQueue<CrawlNode> queue = new LinkedBlockingQueue<>();
-    private volatile Consumer<CrawlNode> processStartedListener;
-    private volatile Consumer<Crawl> processCompletedListener;
+    private volatile Consumer<CrawlNode> processStartedListener = crawlNode -> {};
+    private volatile Consumer<Crawl> processCompletedListener = crawl -> {};
 
     public CrawlerQueueManager() {
         for (int i = 0; i < 1; i++) {
@@ -52,10 +52,16 @@ public class CrawlerQueueManager {
     }
 
     public void setOnProcessStarted(Consumer<CrawlNode> processStarted) {
+        if (processStarted == null) {
+            throw new IllegalStateException("Process started callback cannot be null");
+        }
         this.processStartedListener = processStarted;
     }
 
     public void setOnProcessCompleted(Consumer<Crawl> processCompleted) {
+        if (processCompleted == null) {
+            throw new IllegalStateException("Process completed callback cannot be null");
+        }
         this.processCompletedListener = processCompleted;
     }
 
