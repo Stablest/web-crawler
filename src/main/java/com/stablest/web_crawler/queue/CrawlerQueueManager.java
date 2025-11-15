@@ -1,6 +1,5 @@
 package com.stablest.web_crawler.queue;
 
-import com.stablest.web_crawler.dto.Crawl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,8 +81,8 @@ public class CrawlerQueueManager {
 
     private void process(CrawlNode crawlNode) {
         processStartedListener.accept(crawlNode);
-        Crawl crawl = crawlNode.getCrawl();
-        String currentURL = crawlNode.getUrl();
+        Crawl crawl = crawlNode.crawl();
+        String currentURL = crawlNode.url();
         if (!crawl.getVisited().add(currentURL)) {
             return;
         }

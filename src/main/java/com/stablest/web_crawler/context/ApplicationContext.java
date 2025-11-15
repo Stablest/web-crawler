@@ -1,6 +1,6 @@
 package com.stablest.web_crawler.context;
 
-import com.stablest.web_crawler.dto.Crawl;
+import com.stablest.web_crawler.queue.Crawl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

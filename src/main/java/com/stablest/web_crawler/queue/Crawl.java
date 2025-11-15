@@ -1,4 +1,4 @@
-package com.stablest.web_crawler.dto;
+package com.stablest.web_crawler.queue;
 
 import java.net.URI;
 import java.util.Objects;
