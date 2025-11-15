@@ -1,6 +1,8 @@
 package com.stablest.web_crawler.context;
 
 import com.stablest.web_crawler.dto.Crawl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -10,6 +12,7 @@ public class ApplicationContext {
     private static ApplicationContext INSTANCE;
     private final ConcurrentHashMap<String, Crawl> resultSet = new ConcurrentHashMap<>();
     private final String baseURL;
+    private final Logger logger = LoggerFactory.getLogger(ApplicationContext.class);
 
     private ApplicationContext(String[] args) {
         String prefix = "BASE_URL" + "=";
@@ -18,8 +21,8 @@ public class ApplicationContext {
                 .map(arg -> arg.substring(prefix.length()))
                 .findFirst();
         this.baseURL = optionalBaseURL.orElseThrow(() -> new IllegalStateException("BASE_URL must be provided."));
-        System.out.println(this.baseURL);
         INSTANCE = this;
+        logger.info("Application is crawling {}", this.baseURL);
     }
 
     public static void createContext(String[] args) {
