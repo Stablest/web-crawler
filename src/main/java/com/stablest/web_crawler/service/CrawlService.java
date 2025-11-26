@@ -44,7 +44,7 @@ public class CrawlService {
         URI baseURI = URI.create(applicationContext.getBaseURL());
         Crawl crawl = new Crawl(keyword, id, baseURI);
         applicationContext.getResultSet().put(id, crawl);
-        crawlerQueueManager.enqueue(new CrawlNode(crawl, baseURI.toString()));
+        crawlerQueueManager.process(new CrawlNode(crawl, baseURI.toString()));
         return new CreateCrawlOutput(id);
     }
 }

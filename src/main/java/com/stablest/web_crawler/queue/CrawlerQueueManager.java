@@ -14,25 +14,16 @@ import java.util.function.Consumer;
 import java.util.regex.Matcher;
 
 public class CrawlerQueueManager {
+    static private final int MAX_CONCURRENT_REQUESTS = 256;
     static private final CrawlerQueueManager INSTANCE = new CrawlerQueueManager();
-    final private Semaphore semaphore = new Semaphore(256, true);
-    final private HttpClient httpClient = CrawlerQueueHttpClient.getClient();
     final private Logger logger = LoggerFactory.getLogger(CrawlerQueueManager.class);
-    final private ScheduledExecutorService workers = Executors.newScheduledThreadPool(1);
-    final private ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-    final private BlockingQueue<CrawlNode> queue = new LinkedBlockingQueue<>();
+    final private HttpClient httpClient = CrawlerQueueHttpClient.getClient();
+    final private Semaphore semaphore = new Semaphore(MAX_CONCURRENT_REQUESTS, true);
+    final private ExecutorService taskService = Executors.newFixedThreadPool(1);
+    final private ExecutorService virtualTaskService = Executors.newVirtualThreadPerTaskExecutor();
+    final private ScheduledExecutorService scheduledTaskService = Executors.newScheduledThreadPool(1);
     private volatile Consumer<CrawlNode> processStartedListener = crawlNode -> {};
     private volatile Consumer<Crawl> processCompletedListener = crawl -> {};
-
-    public CrawlerQueueManager() {
-        for (int i = 0; i < 1; i++) {
-            workers.submit(this::processLoop);
-        }
-    }
-
-    static public CrawlerQueueManager getInstance() {
-        return INSTANCE;
-    }
 
     private static boolean isValidLink(String link) {
         return !link.contains(" ") && !link.contains("%w");
@@ -46,44 +37,7 @@ public class CrawlerQueueManager {
         return Objects.equals(host1, host2);
     }
 
-    public int getQueueSize() {
-        return queue.size();
-    }
-
-    public void setOnProcessStarted(Consumer<CrawlNode> processStarted) {
-        if (processStarted == null) {
-            throw new IllegalStateException("Process started callback cannot be null");
-        }
-        this.processStartedListener = processStarted;
-    }
-
-    public void setOnProcessCompleted(Consumer<Crawl> processCompleted) {
-        if (processCompleted == null) {
-            throw new IllegalStateException("Process completed callback cannot be null");
-        }
-        this.processCompletedListener = processCompleted;
-    }
-
-    public boolean enqueue(CrawlNode crawlNode) {
-        return queue.offer(crawlNode);
-    }
-
-    private void processLoop() {
-        try {
-            while (!Thread.currentThread().isInterrupted()) {
-                CrawlNode crawlNode = queue.take();
-                process(crawlNode);
-            }
-        } catch (Exception e) {
-            if (e instanceof InterruptedException) {
-                Thread.currentThread().interrupt();
-            } else {
-                logger.error("PROCESS_LOOP::ERROR::NOT_HANDLED: {}", e.getMessage());
-            }
-        }
-    }
-
-    private void process(CrawlNode crawlNode) {
+    private void onCrawlStarted(CrawlNode crawlNode) {
         processStartedListener.accept(crawlNode);
         Crawl crawl = crawlNode.crawl();
         String currentURL = crawlNode.url();
@@ -103,8 +57,8 @@ public class CrawlerQueueManager {
                     .GET()
                     .build();
             httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                    .thenAccept(response -> onCrawlAccepted(response, crawl, currentURL))
                     .orTimeout(60, TimeUnit.SECONDS)
+                    .thenAcceptAsync(response -> onCrawlAccepted(response, crawl, currentURL), taskService)
                     .exceptionally((exception) -> onCrawlException(exception, crawl, currentURL))
                     .whenComplete((_v, exception) -> onCrawlComplete(crawl));
         } catch (Exception exception) {
@@ -137,7 +91,7 @@ public class CrawlerQueueManager {
                 continue;
             }
             if (!crawl.getVisited().contains(resolvedStr) && crawl.getToVisit().add(resolvedStr)) {
-                enqueue(new CrawlNode(crawl, resolvedStr));
+                process(new CrawlNode(crawl, resolvedStr));
             }
         }
     }
@@ -145,10 +99,10 @@ public class CrawlerQueueManager {
     private Void onCrawlException(Throwable exception, Crawl crawl, String currentURL) {
         logger.debug("TASK::FAILED {}\n {}", currentURL, exception.toString());
         if (exception instanceof TimeoutException) {
-            enqueue(new CrawlNode(crawl, currentURL));
+            process(new CrawlNode(crawl, currentURL));
         }
         if (exception instanceof CompletionException) {
-            scheduler.schedule(() -> enqueue(new CrawlNode(crawl, currentURL)), 15, TimeUnit.SECONDS);
+            scheduledTaskService.schedule(() -> process(new CrawlNode(crawl, currentURL)), 15, TimeUnit.SECONDS);
         }
         crawl.getVisited().remove(currentURL);
         crawl.getToVisit().add(currentURL);
@@ -165,8 +119,31 @@ public class CrawlerQueueManager {
         processCompletedListener.accept(crawl);
     }
 
+    static public CrawlerQueueManager getInstance() {
+        return INSTANCE;
+    }
+
+    public void setOnProcessStarted(Consumer<CrawlNode> processStarted) {
+        if (processStarted == null) {
+            throw new IllegalStateException("Process started callback cannot be null");
+        }
+        this.processStartedListener = processStarted;
+    }
+
+    public void setOnProcessCompleted(Consumer<Crawl> processCompleted) {
+        if (processCompleted == null) {
+            throw new IllegalStateException("Process completed callback cannot be null");
+        }
+        this.processCompletedListener = processCompleted;
+    }
+
+    public void process(CrawlNode crawlNode) {
+        virtualTaskService.submit(() -> onCrawlStarted(crawlNode));
+    }
+
     public void shutdown() {
-        workers.shutdown();
-        scheduler.shutdown();
+        taskService.shutdown();
+        virtualTaskService.shutdown();
+        scheduledTaskService.shutdown();
     }
 }
