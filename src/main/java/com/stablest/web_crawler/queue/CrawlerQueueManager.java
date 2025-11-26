@@ -59,7 +59,7 @@ public class CrawlerQueueManager {
             httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                     .orTimeout(60, TimeUnit.SECONDS)
                     .thenAcceptAsync(response -> onCrawlAccepted(response, crawl, currentURL), taskService)
-                    .exceptionally((exception) -> onCrawlException(exception, crawl, currentURL))
+                    .exceptionally((exception) -> onCrawlException(exception, crawlNode, currentURL))
                     .whenComplete((_v, exception) -> onCrawlComplete(crawl));
         } catch (Exception exception) {
             onCrawlComplete(crawl);
@@ -96,16 +96,15 @@ public class CrawlerQueueManager {
         }
     }
 
-    private Void onCrawlException(Throwable exception, Crawl crawl, String currentURL) {
+    private Void onCrawlException(Throwable exception, CrawlNode crawlNode, String currentURL) {
         logger.debug("TASK::FAILED {}\n {}", currentURL, exception.toString());
-        if (exception instanceof TimeoutException) {
-            process(new CrawlNode(crawl, currentURL));
+        if (exception instanceof TimeoutException || exception instanceof CompletionException) {
+            retry(crawlNode);
+        } else {
+            logger.error("CRAWLER::EXCEPTION::NOT_HANDLED {}", exception.getMessage());
         }
-        if (exception instanceof CompletionException) {
-            scheduledTaskService.schedule(() -> process(new CrawlNode(crawl, currentURL)), 15, TimeUnit.SECONDS);
-        }
-        crawl.getVisited().remove(currentURL);
-        crawl.getToVisit().add(currentURL);
+        crawlNode.crawl().getVisited().remove(currentURL);
+        crawlNode.crawl().getToVisit().add(currentURL);
         return null;
     }
 
@@ -139,6 +138,16 @@ public class CrawlerQueueManager {
 
     public void process(CrawlNode crawlNode) {
         virtualTaskService.submit(() -> onCrawlStarted(crawlNode));
+    }
+
+    public void retry(CrawlNode crawlNode) {
+        if (crawlNode.retries() > 4) {
+            logger.error("CRAWL_MAXED_OUT_ERROR_RETRIES {}", crawlNode);
+        } else {
+            CrawlNode nextCrawlNode = crawlNode.nextRetry();
+            long delay = nextCrawlNode.retries() * 15L;
+            scheduledTaskService.schedule(() -> process(nextCrawlNode), delay, TimeUnit.SECONDS);
+        }
     }
 
     public void shutdown() {
