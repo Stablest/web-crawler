@@ -17,12 +17,11 @@ public class CrawlerQueueManager {
     static private final int MAX_CONCURRENT_REQUESTS = 256;
     static private final int MAX_CRAWL_RETRIES = 4;
     static private final CrawlerQueueManager INSTANCE = new CrawlerQueueManager();
-    final private Logger logger = LoggerFactory.getLogger(CrawlerQueueManager.class);
-    final private HttpClient httpClient = CrawlerQueueHttpClient.getClient();
-    final private Semaphore semaphore = new Semaphore(MAX_CONCURRENT_REQUESTS, true);
-    final private ExecutorService taskService = Executors.newFixedThreadPool(1);
-    final private ExecutorService virtualTaskService = Executors.newVirtualThreadPerTaskExecutor();
-    final private ScheduledExecutorService scheduledTaskService = Executors.newScheduledThreadPool(1);
+    private final Logger logger = LoggerFactory.getLogger(CrawlerQueueManager.class);
+    private final HttpClient httpClient = CrawlerQueueHttpClient.getClient();
+    private final Semaphore semaphore = new Semaphore(MAX_CONCURRENT_REQUESTS, true);
+    private final ExecutorService virtualTaskService = Executors.newVirtualThreadPerTaskExecutor();
+    private final ScheduledExecutorService scheduledTaskService = Executors.newScheduledThreadPool(1);
     private volatile Consumer<CrawlNode> processStartedListener = crawlNode -> {};
     private volatile Consumer<Crawl> processCompletedListener = crawl -> {};
 
@@ -59,7 +58,7 @@ public class CrawlerQueueManager {
                     .build();
             httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                     .orTimeout(60, TimeUnit.SECONDS)
-                    .thenAcceptAsync(response -> onCrawlAccepted(response, crawl, currentURL), taskService)
+                    .thenAcceptAsync(response -> onCrawlAccepted(response, crawl, currentURL), scheduledTaskService)
                     .exceptionally((exception) -> onCrawlException(exception, crawlNode, currentURL))
                     .whenComplete((_v, exception) -> onCrawlComplete(crawl));
         } catch (Exception exception) {
@@ -152,7 +151,6 @@ public class CrawlerQueueManager {
     }
 
     public void shutdown() {
-        taskService.shutdown();
         virtualTaskService.shutdown();
         scheduledTaskService.shutdown();
     }
