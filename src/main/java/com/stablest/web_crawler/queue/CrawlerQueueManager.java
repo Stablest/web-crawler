@@ -16,6 +16,7 @@ import java.util.regex.Matcher;
 public class CrawlerQueueManager {
     static private final int MAX_CONCURRENT_REQUESTS = 256;
     static private final int MAX_CRAWL_RETRIES = 4;
+    static private final long RETRY_BASE_TIME = 15L;
     static private final CrawlerQueueManager INSTANCE = new CrawlerQueueManager();
     private final Logger logger = LoggerFactory.getLogger(CrawlerQueueManager.class);
     private final HttpClient httpClient = CrawlerQueueHttpClient.getClient();
@@ -145,7 +146,7 @@ public class CrawlerQueueManager {
             logger.error("CRAWL_MAXED_OUT_ERROR_RETRIES {}", crawlNode);
         } else {
             CrawlNode nextCrawlNode = crawlNode.nextRetry();
-            long delay = nextCrawlNode.retries() * 15L;
+            long delay = nextCrawlNode.retries() * RETRY_BASE_TIME;
             scheduledTaskService.schedule(() -> process(nextCrawlNode), delay, TimeUnit.SECONDS);
         }
     }
