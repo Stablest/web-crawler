@@ -1,14 +1,14 @@
 package com.stablest.web_crawler;
 
-import com.stablest.web_crawler.context.ApplicationContext;
-import com.stablest.web_crawler.context.CrawlContext;
-import com.stablest.web_crawler.controller.CrawlController;
-import com.stablest.web_crawler.exception.ExceptionHandler;
-import com.stablest.web_crawler.exception.NotFoundException;
-import com.stablest.web_crawler.exception.ValidationException;
-import com.stablest.web_crawler.queue.CrawlerQueueManager;
-import com.stablest.web_crawler.service.CrawlService;
-import com.stablest.web_crawler.transformer.JsonTransformer;
+import com.stablest.web_crawler.common.ApplicationContext;
+import com.stablest.web_crawler.common.exception.ExceptionHandler;
+import com.stablest.web_crawler.common.exception.NotFoundException;
+import com.stablest.web_crawler.common.exception.ValidationException;
+import com.stablest.web_crawler.common.transformer.JsonTransformer;
+import com.stablest.web_crawler.crawl.CrawlContext;
+import com.stablest.web_crawler.crawl.CrawlController;
+import com.stablest.web_crawler.crawl.CrawlService;
+import com.stablest.web_crawler.crawl.queue.CrawlerQueueManager;
 
 import static spark.Spark.*;
 
