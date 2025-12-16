@@ -1,4 +1,4 @@
-package com.stablest.web_crawler.crawl.queue;
+package com.stablest.web_crawler.crawl.model;
 
 import java.net.URI;
 import java.util.Objects;

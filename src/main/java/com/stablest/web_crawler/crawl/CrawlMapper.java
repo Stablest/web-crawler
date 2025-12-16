@@ -1,7 +1,7 @@
 package com.stablest.web_crawler.crawl;
 
 import com.stablest.web_crawler.crawl.dto.CrawlPublicResult;
-import com.stablest.web_crawler.crawl.queue.Crawl;
+import com.stablest.web_crawler.crawl.model.Crawl;
 
 import java.util.ArrayList;
 

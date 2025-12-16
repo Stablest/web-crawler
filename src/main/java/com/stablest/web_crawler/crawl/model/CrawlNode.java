@@ -1,4 +1,4 @@
-package com.stablest.web_crawler.crawl.queue;
+package com.stablest.web_crawler.crawl.model;
 
 public record CrawlNode(Crawl crawl, String url, int retries) {
 
