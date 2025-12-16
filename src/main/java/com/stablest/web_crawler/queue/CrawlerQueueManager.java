@@ -17,7 +17,6 @@ public class CrawlerQueueManager {
     static private final int MAX_CONCURRENT_REQUESTS = 256;
     static private final int MAX_CRAWL_RETRIES = 4;
     static private final long RETRY_BASE_TIME = 15L;
-    static private final CrawlerQueueManager INSTANCE = new CrawlerQueueManager();
     private final Logger logger = LoggerFactory.getLogger(CrawlerQueueManager.class);
     private final HttpClient httpClient = CrawlerQueueHttpClient.getClient();
     private final Semaphore semaphore = new Semaphore(MAX_CONCURRENT_REQUESTS, true);
@@ -117,10 +116,6 @@ public class CrawlerQueueManager {
             crawl.complete();
         }
         processCompletedListener.accept(crawl);
-    }
-
-    static public CrawlerQueueManager getInstance() {
-        return INSTANCE;
     }
 
     public void setOnProcessStarted(Consumer<CrawlNode> processStarted) {

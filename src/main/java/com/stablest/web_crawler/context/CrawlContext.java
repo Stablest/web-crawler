@@ -9,13 +9,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class CrawlContext {
     private static final int MAX_RESULT_SET_SIZE = 10;
-    private static final CrawlContext INSTANCE = new CrawlContext();
     private final ConcurrentHashMap<String, Crawl> resultSet = new ConcurrentHashMap<>();
     private final Logger logger = LoggerFactory.getLogger(CrawlContext.class);
-
-    public static CrawlContext getInstance() {
-        return INSTANCE;
-    }
 
     public Optional<Crawl> getResult(String key) {
         Crawl crawl = resultSet.get(key);

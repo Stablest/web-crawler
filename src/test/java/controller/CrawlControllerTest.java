@@ -1,17 +1,18 @@
 package controller;
 
+import com.google.gson.JsonSyntaxException;
 import com.stablest.web_crawler.controller.CrawlController;
 import com.stablest.web_crawler.dto.CrawlPublicResult;
 import com.stablest.web_crawler.dto.output.CreateCrawlOutput;
 import com.stablest.web_crawler.exception.NotFoundException;
 import com.stablest.web_crawler.exception.ValidationException;
 import com.stablest.web_crawler.service.CrawlService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 import spark.Request;
-import spark.Response;
 
 import java.util.List;
 
@@ -19,69 +20,81 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 public class CrawlControllerTest {
     @Mock
-    private CrawlService crawlService = Mockito.mock(CrawlService.class);
+    private CrawlService crawlService;
     @Mock
-    private Request request = Mockito.mock(Request.class);
-    @Mock
-    private Response response = Mockito.mock(Response.class);
+    private Request request;
+    @InjectMocks
     private CrawlController controller;
 
-    @BeforeEach
-    void setUp() throws Exception {
-        controller = CrawlController.getInstance();
-        var crawlField = CrawlController.class.getDeclaredField("crawlService");
-        crawlField.setAccessible(true);
-        crawlField.set(controller, crawlService);
+    private void stubCrawlServiceCreateCrawl(String id) {
+        CreateCrawlOutput createCrawlOutput = new CreateCrawlOutput(id);
+        when(crawlService.createCrawl(any(String.class))).thenReturn(createCrawlOutput);
     }
 
-    @Test
-    void givenValidInput_whenCreateCrawl_thenReturnsCreatedCrawl() {
-        String input = "{\"keyword\": \"java\"}";
-        when(request.body()).thenReturn(input);
-        CreateCrawlOutput expectedOutput = new CreateCrawlOutput("crawl123");
-        when(crawlService.createCrawl("java")).thenReturn(expectedOutput);
-        CreateCrawlOutput output = controller.createCrawl(request, null);
-        verify(crawlService).createCrawl("java");
-        assertEquals(expectedOutput, output);
+    private void stubCrawlServiceGetCrawl(Throwable throwable) {
+        when(crawlService.getCrawl(any(String.class))).thenThrow(throwable);
+    }
+
+    private void stubCrawlServiceGetCrawl(CrawlPublicResult output) {
+        when(crawlService.getCrawl(any(String.class))).thenReturn(output);
+    }
+
+    private void stubRequestBody(String body) {
+        when(request.body()).thenReturn(body);
+    }
+
+    private void stubRequestParams(String paramName, String output) {
+        when(request.params(paramName)).thenReturn(output);
     }
 
     @Test
     void givenMissingKeyword_whenCreateCrawl_thenThrowsValidationException() {
         String invalidInput = "{\"key\": \"java\"}";
-        when(request.body()).thenReturn(invalidInput);
-        assertThrows(
-                ValidationException.class,
-                () -> controller.createCrawl(request, null)
-        );
+
+        stubRequestBody(invalidInput);
+
+        assertThrows(ValidationException.class, () -> controller.createCrawl(request, null));
         verifyNoInteractions(crawlService);
     }
 
     @Test
-    void givenExistingCrawlId_whenGetCrawlResult_thenReturnsCrawlResult() {
-        when(request.params("id")).thenReturn("crawl123");
-        CrawlPublicResult expectedOutput = new CrawlPublicResult("crawl123", "done", List.of("http://base_url.com"));
-        when(crawlService.getCrawl("crawl123")).thenReturn(expectedOutput);
-        CrawlPublicResult output = controller.getCrawlResult(request, null);
-        verify(crawlService).getCrawl("crawl123");
+    void givenNonExistentCrawlId_whenGetCrawlResult_thenThrowsNotFound() {
+        stubRequestParams("id", "crawl123");
+        stubCrawlServiceGetCrawl(new NotFoundException());
+
+        assertThrows(NotFoundException.class, () -> controller.getCrawlResult(request, null));
+    }
+
+    @Test
+    void givenInvalidJson_whenCreateCrawl_thenThrowsJsonSyntaxException() {
+        String input = "{";
+        stubRequestBody(input);
+        assertThrows(JsonSyntaxException.class, () -> controller.createCrawl(request, null));
+    }
+
+    @Test
+    void givenValidInput_whenCreateCrawl_thenReturnsCreatedCrawl() {
+        String input = "{\"keyword\": \"java\"}";
+
+        stubRequestBody(input);
+        stubCrawlServiceCreateCrawl("1");
+
+        CreateCrawlOutput expectedOutput = new CreateCrawlOutput("1");
+        CreateCrawlOutput output = controller.createCrawl(request, null);
         assertEquals(expectedOutput, output);
     }
 
-
     @Test
-    void givenNonExistentCrawlId_whenGetCrawlResult_thenThrowsNotFound() {
-        when(request.params("id")).thenReturn("crawl123");
-        when(crawlService.getCrawl("crawl123")).thenThrow(NotFoundException.class);
-        assertThrows(
-                NotFoundException.class,
-                () -> controller.getCrawlResult(request, null)
-        );
-    }
+    void givenExistingCrawlId_whenGetCrawlResult_thenReturnsCrawlResult() {
+        CrawlPublicResult expectedOutput = new CrawlPublicResult("crawl123", "done", List.of("http://base_url.com"));
 
-    @Test
-    void givenInvalidJson_whenCreateCrawl_thenThrowsException() {
-        when(request.body()).thenReturn("invalid-json");
-        assertThrows(Exception.class, () -> controller.createCrawl(request, response));
+        stubRequestParams("id", "crawl123");
+        stubCrawlServiceGetCrawl(expectedOutput);
+
+        CrawlPublicResult output = controller.getCrawlResult(request, null);
+        assertEquals(expectedOutput, output);
     }
 }
