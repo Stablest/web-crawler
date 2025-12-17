@@ -18,11 +18,14 @@ public class CrawlService {
     final private CrawlContext crawlContext;
     final private ApplicationContext applicationContext;
     final private CrawlerQueueManager crawlerQueueManager;
+    final private AlphanumericGenerator alphanumericGenerator;
 
-    public CrawlService(ApplicationContext applicationContext, CrawlContext crawlContext, CrawlerQueueManager crawlerQueueManager) {
+    public CrawlService(ApplicationContext applicationContext, CrawlContext crawlContext,
+                        CrawlerQueueManager crawlerQueueManager, AlphanumericGenerator alphanumericGenerator) {
         this.applicationContext = applicationContext;
         this.crawlContext = crawlContext;
         this.crawlerQueueManager = crawlerQueueManager;
+        this.alphanumericGenerator = alphanumericGenerator;
     }
 
     public CrawlPublicResult getCrawl(String id) {
@@ -33,9 +36,13 @@ public class CrawlService {
 
     public CreateCrawlOutput createCrawl(String keyword) {
         logger.info("CREATE::CRAWL {}", keyword);
-        String id = AlphanumericGenerator.generate();
+        if (keyword == null || keyword.trim().isEmpty()) {
+            throw new IllegalArgumentException("Keyword can't be empty");
+        }
+        String trimmedKeyword = keyword.trim();
+        String id = alphanumericGenerator.generate();
         URI baseURI = URI.create(applicationContext.getBaseURL());
-        Crawl crawl = new Crawl(keyword, id, baseURI);
+        Crawl crawl = new Crawl(trimmedKeyword, id, baseURI);
         crawlContext.putInResult(id, crawl);
         crawlerQueueManager.process(new CrawlNode(crawl, baseURI.toString()));
         return new CreateCrawlOutput(id);
