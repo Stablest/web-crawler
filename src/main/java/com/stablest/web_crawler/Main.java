@@ -5,6 +5,7 @@ import com.stablest.web_crawler.common.exception.ExceptionHandler;
 import com.stablest.web_crawler.common.exception.NotFoundException;
 import com.stablest.web_crawler.common.exception.ValidationException;
 import com.stablest.web_crawler.common.transformer.JsonTransformer;
+import com.stablest.web_crawler.common.utils.AlphanumericGenerator;
 import com.stablest.web_crawler.crawl.CrawlContext;
 import com.stablest.web_crawler.crawl.CrawlController;
 import com.stablest.web_crawler.crawl.CrawlService;
@@ -26,7 +27,9 @@ public class Main {
         registry.register(ApplicationContext.class, applicationContext);
         CrawlContext crawlContext = registry.register(CrawlContext.class, new CrawlContext());
         CrawlerQueueManager crawlerQueueManager = registry.register(CrawlerQueueManager.class, new CrawlerQueueManager());
-        CrawlService crawlService = registry.register(CrawlService.class, new CrawlService(applicationContext, crawlContext, crawlerQueueManager));
+        AlphanumericGenerator alphanumericGenerator = registry.register(AlphanumericGenerator.class, new AlphanumericGenerator());
+        CrawlService crawlService = registry
+                .register(CrawlService.class, new CrawlService(applicationContext, crawlContext, crawlerQueueManager, alphanumericGenerator));
         registry.register(CrawlController.class, new CrawlController(crawlService));
         registry.register(JsonTransformer.class, new JsonTransformer());
         registry.freeze();

@@ -3,7 +3,7 @@ package com.stablest.web_crawler.common.utils;
 import java.util.Random;
 
 public class AlphanumericGenerator {
-    public static String generate(int size) {
+    public String generate(int size) {
         int leftLimit = 48;
         int rightLimit = 122;
         Random random = new Random();
@@ -15,7 +15,7 @@ public class AlphanumericGenerator {
                 .toString();
     }
 
-    public static String generate() {
+    public String generate() {
         return generate(8);
     }
 }

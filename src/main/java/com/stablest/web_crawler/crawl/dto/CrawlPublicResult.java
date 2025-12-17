@@ -1,6 +1,7 @@
 package com.stablest.web_crawler.crawl.dto;
 
 import java.util.List;
+import java.util.Objects;
 
 public class CrawlPublicResult {
     final private String id;
@@ -19,6 +20,18 @@ public class CrawlPublicResult {
 
     public String getStatus() {
         return status;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        CrawlPublicResult that = (CrawlPublicResult) o;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
     }
 
     public List<String> getUrls() {
