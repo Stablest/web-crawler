@@ -16,26 +16,20 @@ import org.slf4j.LoggerFactory;
 import java.net.URI;
 
 public class CrawlService {
-    final private static CrawlService INSTANCE = new CrawlService();
     final private Logger logger = LoggerFactory.getLogger(CrawlService.class);
     final private CrawlContext crawlContext;
     final private ApplicationContext applicationContext;
     final private CrawlerQueueManager crawlerQueueManager;
 
-    private CrawlService() {
-        applicationContext = ApplicationContext.getInstance();
-        crawlContext = CrawlContext.getInstance();
-        crawlerQueueManager = CrawlerQueueManager.getInstance();
-    }
-
-    public static CrawlService getInstance() {
-        return INSTANCE;
+    public CrawlService(ApplicationContext applicationContext, CrawlContext crawlContext, CrawlerQueueManager crawlerQueueManager) {
+        this.applicationContext = applicationContext;
+        this.crawlContext = crawlContext;
+        this.crawlerQueueManager = crawlerQueueManager;
     }
 
     public CrawlPublicResult getCrawl(String id) {
         logger.info("GET::CRAWL {}", id);
-        Crawl crawl = crawlContext.getResult(id)
-                .orElseThrow(() -> new NotFoundException("Crawl id not found."));
+        Crawl crawl = crawlContext.getResult(id).orElseThrow(() -> new NotFoundException("Crawl id not found."));
         return CrawlMapper.toPublic(crawl);
     }
 

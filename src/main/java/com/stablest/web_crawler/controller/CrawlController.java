@@ -9,17 +9,11 @@ import spark.Request;
 import spark.Response;
 
 public class CrawlController {
-    private static final CrawlController INSTANCE = new CrawlController();
     final private CrawlService crawlService;
-    final private Gson gson;
+    final private Gson gson = new Gson();
 
-    private CrawlController() {
-        this.crawlService = CrawlService.getInstance();
-        this.gson = new Gson();
-    }
-
-    public static CrawlController getInstance() {
-        return INSTANCE;
+    public CrawlController(CrawlService crawlService) {
+        this.crawlService = crawlService;
     }
 
     public CreateCrawlOutput createCrawl(Request request, Response response) {

@@ -1,23 +1,46 @@
 package com.stablest.web_crawler;
 
+import com.stablest.web_crawler.context.ApplicationContext;
+import com.stablest.web_crawler.context.CrawlContext;
 import com.stablest.web_crawler.controller.CrawlController;
 import com.stablest.web_crawler.exception.ExceptionHandler;
 import com.stablest.web_crawler.exception.NotFoundException;
 import com.stablest.web_crawler.exception.ValidationException;
-import com.stablest.web_crawler.context.ApplicationContext;
+import com.stablest.web_crawler.queue.CrawlerQueueManager;
+import com.stablest.web_crawler.service.CrawlService;
 import com.stablest.web_crawler.transformer.JsonTransformer;
 
 import static spark.Spark.*;
 
 public class Main {
-    public static void main(String[] args) {
-        ApplicationContext.createContext(args);
+
+    static private void registerExceptions() {
         exception(ValidationException.class, ExceptionHandler::ValidationException);
         exception(RuntimeException.class, ExceptionHandler::RuntimeException);
         exception(NotFoundException.class, ExceptionHandler::NotFoundException);
+    }
+
+    static private ComponentRegistry registerComponents(String[] args) {
+        ComponentRegistry registry = new ComponentRegistry();
+        ApplicationContext applicationContext = new ApplicationContext(args);
+        registry.register(ApplicationContext.class, applicationContext);
+        CrawlContext crawlContext = registry.register(CrawlContext.class, new CrawlContext());
+        CrawlerQueueManager crawlerQueueManager = registry.register(CrawlerQueueManager.class, new CrawlerQueueManager());
+        CrawlService crawlService = registry.register(CrawlService.class, new CrawlService(applicationContext, crawlContext, crawlerQueueManager));
+        registry.register(CrawlController.class, new CrawlController(crawlService));
+        registry.register(JsonTransformer.class, new JsonTransformer());
+        registry.freeze();
+        return registry;
+    }
+
+    public static void main(String[] args) {
+        registerExceptions();
+        ComponentRegistry componentRegistry = registerComponents(args);
+        CrawlController crawlController = componentRegistry.get(CrawlController.class);
+        JsonTransformer jsonTransformer = componentRegistry.get(JsonTransformer.class);
         path("/crawl", () -> {
-            get("/:id", CrawlController.getInstance()::getCrawlResult, new JsonTransformer());
-            post("", CrawlController.getInstance()::createCrawl, new JsonTransformer());
+            get("/:id", crawlController::getCrawlResult, jsonTransformer);
+            post("", crawlController::createCrawl, jsonTransformer);
         });
     }
 }
