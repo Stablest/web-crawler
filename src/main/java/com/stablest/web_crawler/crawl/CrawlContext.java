@@ -1,6 +1,6 @@
 package com.stablest.web_crawler.crawl;
 
-import com.stablest.web_crawler.crawl.queue.Crawl;
+import com.stablest.web_crawler.crawl.model.Crawl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
