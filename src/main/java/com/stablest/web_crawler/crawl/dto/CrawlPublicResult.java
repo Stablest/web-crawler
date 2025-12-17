@@ -1,14 +1,14 @@
 package com.stablest.web_crawler.crawl.dto;
 
-import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 public class CrawlPublicResult {
     final private String id;
     final private String status;
-    final private List<String> urls;
+    final private Set<String> urls;
 
-    public CrawlPublicResult(String id, String status, List<String> urls) {
+    public CrawlPublicResult(String id, String status, Set<String> urls) {
         this.id = id;
         this.status = status;
         this.urls = urls;
@@ -34,7 +34,7 @@ public class CrawlPublicResult {
         return Objects.hashCode(id);
     }
 
-    public List<String> getUrls() {
+    public Set<String> getUrls() {
         return urls;
     }
 }

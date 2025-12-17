@@ -1,12 +1,12 @@
 package crawl;
 
 import com.google.gson.JsonSyntaxException;
-import com.stablest.web_crawler.crawl.CrawlController;
-import com.stablest.web_crawler.crawl.dto.CrawlPublicResult;
-import com.stablest.web_crawler.crawl.dto.output.CreateCrawlOutput;
 import com.stablest.web_crawler.common.exception.NotFoundException;
 import com.stablest.web_crawler.common.exception.ValidationException;
+import com.stablest.web_crawler.crawl.CrawlController;
 import com.stablest.web_crawler.crawl.CrawlService;
+import com.stablest.web_crawler.crawl.dto.CrawlPublicResult;
+import com.stablest.web_crawler.crawl.dto.output.CreateCrawlOutput;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -14,7 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import spark.Request;
 
-import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -89,7 +89,7 @@ public class CrawlControllerTest {
 
     @Test
     void givenExistingCrawlId_whenGetCrawlResult_thenReturnsCrawlResult() {
-        CrawlPublicResult expectedOutput = new CrawlPublicResult("crawl123", "done", List.of("http://base_url.com"));
+        CrawlPublicResult expectedOutput = new CrawlPublicResult("crawl123", "done", Set.of("http://base_url.com"));
 
         stubRequestParams("id", "crawl123");
         stubCrawlServiceGetCrawl(expectedOutput);
