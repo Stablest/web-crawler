@@ -28,7 +28,7 @@ public class CrawlContext {
         resultSet.compute(key, (k, foundValue) -> {
             if (foundValue == null && resultSet.size() >= maxSetSize) {
                 logger.error("MAX_RESULT_SET_SIZE_REACHED");
-                throw new RuntimeException("Can't add key-value as it reached its threshold");
+                throw new IllegalStateException("Cannot add key-value: maximum site reached");
             }
             return value;
         });
