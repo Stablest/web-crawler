@@ -41,7 +41,7 @@ public class CrawlService {
         }
         String trimmedKeyword = keyword.trim();
         String id = alphanumericGenerator.generate();
-        URI baseURI = URI.create(applicationContext.getBaseURL());
+        URI baseURI = URI.create(applicationContext.baseURL());
         Crawl crawl = new Crawl(trimmedKeyword, id, baseURI);
         crawlContext.putInResult(id, crawl);
         crawlerQueueManager.process(new CrawlNode(crawl, baseURI.toString()));

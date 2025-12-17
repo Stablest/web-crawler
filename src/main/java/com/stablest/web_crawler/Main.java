@@ -14,6 +14,29 @@ import com.stablest.web_crawler.crawl.queue.CrawlerQueueManager;
 import static spark.Spark.*;
 
 public class Main {
+    static private final String URL_ARG = "url=";
+    static private final String MAX_SET_SIZE_ARG = "max-set-size=";
+    static private final int DEFAULT_SET_SIZE = 10;
+
+    static private ApplicationContext parseArgumentsIntoApplicationContext(String[] args) {
+        String url = null;
+        int maxSetSize = DEFAULT_SET_SIZE;
+        for (String arg : args) {
+            if (arg.startsWith(URL_ARG)) {
+                url = arg.substring(URL_ARG.length());
+                continue;
+            }
+            if (arg.startsWith(MAX_SET_SIZE_ARG)) {
+                String valueAsString = arg.substring(MAX_SET_SIZE_ARG.length());
+                try {
+                    maxSetSize = valueAsString.isEmpty() ? DEFAULT_SET_SIZE : Integer.parseInt(valueAsString);
+                } catch (NumberFormatException exception) {
+                    throw new IllegalArgumentException("max-set-size must be a valid a number", exception);
+                }
+            }
+        }
+        return new ApplicationContext(url, maxSetSize);
+    }
 
     static private void registerExceptions() {
         exception(ValidationException.class, ExceptionHandler::ValidationException);
@@ -21,11 +44,10 @@ public class Main {
         exception(NotFoundException.class, ExceptionHandler::NotFoundException);
     }
 
-    static private ComponentRegistry registerComponents(String[] args) {
+    static private ComponentRegistry registerComponents(ApplicationContext applicationContext) {
         ComponentRegistry registry = new ComponentRegistry();
-        ApplicationContext applicationContext = new ApplicationContext(args);
         registry.register(ApplicationContext.class, applicationContext);
-        CrawlContext crawlContext = registry.register(CrawlContext.class, new CrawlContext());
+        CrawlContext crawlContext = registry.register(CrawlContext.class, new CrawlContext(10));
         CrawlerQueueManager crawlerQueueManager = registry.register(CrawlerQueueManager.class, new CrawlerQueueManager());
         AlphanumericGenerator alphanumericGenerator = registry.register(AlphanumericGenerator.class, new AlphanumericGenerator());
         CrawlService crawlService = registry
@@ -38,7 +60,8 @@ public class Main {
 
     public static void main(String[] args) {
         registerExceptions();
-        ComponentRegistry componentRegistry = registerComponents(args);
+        ApplicationContext applicationContext = parseArgumentsIntoApplicationContext(args);
+        ComponentRegistry componentRegistry = registerComponents(applicationContext);
         CrawlController crawlController = componentRegistry.get(CrawlController.class);
         JsonTransformer jsonTransformer = componentRegistry.get(JsonTransformer.class);
         path("/crawl", () -> {

@@ -64,7 +64,7 @@ public class CrawlServiceTest {
         String id = "abc12345";
         String baseURL = "url1";
 
-        when(applicationContext.getBaseURL()).thenReturn(baseURL);
+        when(applicationContext.baseURL()).thenReturn(baseURL);
         when(alphanumericGenerator.generate()).thenReturn(id);
 
         Crawl crawl = new Crawl(keyword, id, URI.create(baseURL));
