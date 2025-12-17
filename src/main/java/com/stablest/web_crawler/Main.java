@@ -1,6 +1,7 @@
 package com.stablest.web_crawler;
 
 import com.stablest.web_crawler.common.ApplicationContext;
+import com.stablest.web_crawler.common.ComponentRegistry;
 import com.stablest.web_crawler.common.exception.ExceptionHandler;
 import com.stablest.web_crawler.common.exception.NotFoundException;
 import com.stablest.web_crawler.common.exception.ValidationException;

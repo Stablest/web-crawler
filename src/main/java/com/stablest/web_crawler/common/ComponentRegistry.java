@@ -1,4 +1,4 @@
-package com.stablest.web_crawler;
+package com.stablest.web_crawler.common;
 
 import java.util.HashMap;
 import java.util.Map;
