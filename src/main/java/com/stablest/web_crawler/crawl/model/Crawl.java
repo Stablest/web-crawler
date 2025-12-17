@@ -8,28 +8,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 public class Crawl {
-
-    public enum Status {
-        ACTIVE("active"),
-        DONE("done");
-
-        private final String value;
-
-        Status(String value) {
-            this.value = value;
-        }
-
-        public String getValue() {
-            return value;
-        }
-    }
-
     static final private Pattern linkPattern = Pattern.compile(
             "<a\\b[^>]*?href\\s*=\\s*(?:['\"]([^'\"]+)['\"]|([^\\s>]+))",
             Pattern.CASE_INSENSITIVE
     );
 
-    private Status status;
+    private CrawlStatus status;
     final private AtomicInteger activeTasks;
     final private String id;
     final private String keyword;
@@ -44,7 +28,7 @@ public class Crawl {
         this.id = id;
         this.baseURL = baseURL;
         lowerCaseKeyword = keyword.toLowerCase();
-        status = Status.ACTIVE;
+        status = CrawlStatus.ACTIVE;
         urlListMatched = ConcurrentHashMap.newKeySet();
         visited = ConcurrentHashMap.newKeySet();
         toVisit = ConcurrentHashMap.newKeySet();
@@ -80,7 +64,7 @@ public class Crawl {
         return activeTasks;
     }
 
-    public Status getStatus() {
+    public CrawlStatus getStatus() {
         return status;
     }
 
@@ -93,7 +77,7 @@ public class Crawl {
     }
 
     public void complete() {
-        status = Status.DONE;
+        status = CrawlStatus.DONE;
     }
 
     @Override
