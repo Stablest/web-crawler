@@ -47,7 +47,7 @@ public class Main {
     static private ComponentRegistry registerComponents(ApplicationContext applicationContext) {
         ComponentRegistry registry = new ComponentRegistry();
         registry.register(ApplicationContext.class, applicationContext);
-        CrawlContext crawlContext = registry.register(CrawlContext.class, new CrawlContext(10));
+        CrawlContext crawlContext = registry.register(CrawlContext.class, new CrawlContext(applicationContext.maxSetSize()));
         CrawlerQueueManager crawlerQueueManager = registry.register(CrawlerQueueManager.class, new CrawlerQueueManager());
         AlphanumericGenerator alphanumericGenerator = registry.register(AlphanumericGenerator.class, new AlphanumericGenerator());
         CrawlService crawlService = registry
