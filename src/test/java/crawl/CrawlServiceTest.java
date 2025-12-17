@@ -80,7 +80,7 @@ public class CrawlServiceTest {
 
     @ParameterizedTest
     @NullAndEmptySource()
-    void givenNullKeyword_whenCreateCrawl_thenThrowsIllegalArgumentExceptionAndNotInteractWithContextAndQueueManager(String keyword) {
+    void givenNullOrEmptyKeyword_whenCreateCrawl_thenThrowsIllegalArgumentExceptionAndNotInteractWithContextAndQueueManager(String keyword) {
         Assertions.assertThrows(IllegalArgumentException.class, () -> crawlService.createCrawl(keyword));
         verifyNoInteractions(crawlContext, crawlerQueueManager);
     }
